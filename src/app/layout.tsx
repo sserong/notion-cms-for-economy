@@ -15,9 +15,12 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'NextJS Starter - 모던 웹 스타터킷',
+  title: {
+    default: '오늘의 경제뉴스 겟',
+    template: '%s | 오늘의 경제뉴스 겟',
+  },
   description:
-    'Next.js 15, TypeScript, TailwindCSS, ShadcnUI로 구축된 프로덕션 준비가 완료된 웹 애플리케이션 스타터킷',
+    'Notion CMS 기반 경제뉴스 블로그. 주식, 부동산, 거시경제, 기업·산업 분야의 최신 뉴스를 한눈에.',
 }
 
 export default function RootLayout({

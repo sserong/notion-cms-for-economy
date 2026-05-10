@@ -23,22 +23,24 @@ Notion을 CMS로 활용한 경제뉴스 블로그입니다. Notion에서 글을 
 
 ### 환경 변수 설정
 
-`.env.local` 파일을 생성하고 아래 값을 입력합니다.
+`.env.local.example` 파일을 복사하여 `.env.local`을 생성하고 실제 값을 입력합니다.
 
 ```bash
-NOTION_API_KEY=your_notion_api_key
-NOTION_DATABASE_ID=your_database_id
+cp .env.local.example .env.local
+# .env.local 파일에 NOTION_API_KEY와 NOTION_DATABASE_ID 입력
 ```
+
+Notion Integration 생성: https://www.notion.so/my-integrations
 
 ### Notion 데이터베이스 구조
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| Title | title | 글 제목 |
-| Category | select | 카테고리 |
-| Tags | multi_select | 태그 |
-| Published | date | 발행일 |
-| Status | select | 초안 / 발행됨 |
+| 필드      | 타입         | 설명          |
+| --------- | ------------ | ------------- |
+| Title     | title        | 글 제목       |
+| Category  | select       | 카테고리      |
+| Tags      | multi_select | 태그          |
+| Published | date         | 발행일        |
+| Status    | select       | 초안 / 발행됨 |
 
 ### 개발 서버 실행
 

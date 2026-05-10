@@ -5,6 +5,17 @@ const nextConfig: NextConfig = {
   compress: true,
   images: {
     formats: ['image/webp', 'image/avif'],
+    // Notion 이미지 도메인 허용 (이미지 블록 렌더링에 필요)
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'prod-files-secure.s3.us-west-2.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.notion.so',
+      },
+    ],
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],
