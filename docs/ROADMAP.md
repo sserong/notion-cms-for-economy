@@ -70,12 +70,12 @@ Notion을 CMS로 활용해 작성한 글이 자동으로 블로그에 반영되�
 
 UI 구현에 앞서 라우트, 레이아웃, 환경 변수 검증 등 전체 애플리케이션의 뼈대를 확정하는 단계입니다.
 
-- **T002: 환경 변수 검증 및 Notion 클라이언트 안정화** ⬜ - 우선순위
-  - **상태**: ⬜ 미시작 | **기능 ID**: F010 | **예상 소요시간**: 3h
-  - `src/lib/env.ts`에서 `NOTION_API_KEY`, `NOTION_DATABASE_ID` 존재 검증 로직 강화 (Zod 권장)
-  - 누락 시 명확한 에러 메시지로 빌드/런타임 실패 처리
-  - `.env.local.example` 항목 점검 및 README에 환경 변수 설정 가이드 추가
-  - Notion 클라이언트 호출부의 에러 핸들링 (try/catch + 로깅) 표준화
+- **T002: 환경 변수 검증 및 Notion 클라이언트 안정화** ✅ - 완료
+  - **상태**: ✅ 완료 | **기능 ID**: F010 | **예상 소요시간**: 3h
+  - ✅ `src/lib/env.ts` — `NOTION_API_KEY`, `NOTION_DATABASE_ID` 필수값으로 변경 (Zod, 한국어 에러 메시지)
+  - ✅ `src/lib/notion.ts` — `process.env` 직접 접근 제거, `env` 객체 참조로 전환, `getDatabaseId()` 헬퍼 삭제
+  - ✅ `src/lib/notion.ts` — 4개 API 함수 (getPosts, getPostsByCategory, getPostById, getPostBlocks) try/catch + 로깅 표준화
+  - ✅ `README.md` — 환경 변수 누락 시 에러 발생 안내 추가
 
 - **T003: 라우트 구조 및 공통 레이아웃 확정** ⬜
   - **상태**: ⬜ 미시작 | **기능 ID**: F005 | **예상 소요시간**: 4h

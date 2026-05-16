@@ -9,19 +9,12 @@ import type {
   RichTextItemResponse,
 } from '@notionhq/client/build/src/api-endpoints'
 import type { Post, PostCategory, NotionBlock } from '@/types/notion'
+import { env } from '@/lib/env'
 
 /** Notion API 클라이언트 인스턴스 (서버 사이드 전용) */
 const notion = new Client({
-  auth: process.env.NOTION_API_KEY,
+  auth: env.NOTION_API_KEY,
 })
-
-/** 환경 변수에서 데이터베이스 ID 가져오기 */
-function getDatabaseId(): string {
-  const id = process.env.NOTION_DATABASE_ID
-  if (!id)
-    throw new Error('NOTION_DATABASE_ID 환경 변수가 설정되지 않았습니다.')
-  return id
-}
 
 /**
  * RichText 배열에서 일반 텍스트 추출
@@ -79,28 +72,33 @@ function pageToPost(page: PageObjectResponse): Post {
  * @returns 발행된 포스트 배열
  */
 export async function getPosts(): Promise<Post[]> {
-  const response = await notion.databases.query({
-    database_id: getDatabaseId(),
-    filter: {
-      property: 'Status',
-      select: {
-        equals: '발행됨',
+  try {
+    const response = await notion.databases.query({
+      database_id: env.NOTION_DATABASE_ID,
+      filter: {
+        property: 'Status',
+        select: {
+          equals: '발행됨',
+        },
       },
-    },
-    sorts: [
-      {
-        property: 'Published',
-        direction: 'descending',
-      },
-    ],
-  })
+      sorts: [
+        {
+          property: 'Published',
+          direction: 'descending',
+        },
+      ],
+    })
 
-  return response.results
-    .filter(
-      (page): page is PageObjectResponse =>
-        page.object === 'page' && 'properties' in page
-    )
-    .map(pageToPost)
+    return response.results
+      .filter(
+        (page): page is PageObjectResponse =>
+          page.object === 'page' && 'properties' in page
+      )
+      .map(pageToPost)
+  } catch (error) {
+    console.error('[notion] getPosts 실패:', error)
+    throw error
+  }
 }
 
 /**
@@ -111,38 +109,43 @@ export async function getPosts(): Promise<Post[]> {
 export async function getPostsByCategory(
   category: PostCategory
 ): Promise<Post[]> {
-  const response = await notion.databases.query({
-    database_id: getDatabaseId(),
-    filter: {
-      and: [
-        {
-          property: 'Status',
-          select: {
-            equals: '발행됨',
+  try {
+    const response = await notion.databases.query({
+      database_id: env.NOTION_DATABASE_ID,
+      filter: {
+        and: [
+          {
+            property: 'Status',
+            select: {
+              equals: '발행됨',
+            },
           },
-        },
-        {
-          property: 'Category',
-          select: {
-            equals: category,
+          {
+            property: 'Category',
+            select: {
+              equals: category,
+            },
           },
+        ],
+      },
+      sorts: [
+        {
+          property: 'Published',
+          direction: 'descending',
         },
       ],
-    },
-    sorts: [
-      {
-        property: 'Published',
-        direction: 'descending',
-      },
-    ],
-  })
+    })
 
-  return response.results
-    .filter(
-      (page): page is PageObjectResponse =>
-        page.object === 'page' && 'properties' in page
-    )
-    .map(pageToPost)
+    return response.results
+      .filter(
+        (page): page is PageObjectResponse =>
+          page.object === 'page' && 'properties' in page
+      )
+      .map(pageToPost)
+  } catch (error) {
+    console.error('[notion] getPostsByCategory 실패:', error)
+    throw error
+  }
 }
 
 /**
@@ -151,11 +154,16 @@ export async function getPostsByCategory(
  * @returns Post 객체 또는 null
  */
 export async function getPostById(postId: string): Promise<Post | null> {
-  const page = await notion.pages.retrieve({ page_id: postId })
+  try {
+    const page = await notion.pages.retrieve({ page_id: postId })
 
-  if (page.object !== 'page' || !('properties' in page)) return null
+    if (page.object !== 'page' || !('properties' in page)) return null
 
-  return pageToPost(page as PageObjectResponse)
+    return pageToPost(page as PageObjectResponse)
+  } catch (error) {
+    console.error('[notion] getPostById 실패:', error)
+    throw error
+  }
 }
 
 /**
@@ -164,85 +172,90 @@ export async function getPostById(postId: string): Promise<Post | null> {
  * @returns 파싱된 NotionBlock 배열
  */
 export async function getPostBlocks(postId: string): Promise<NotionBlock[]> {
-  const response = await notion.blocks.children.list({
-    block_id: postId,
-  })
+  try {
+    const response = await notion.blocks.children.list({
+      block_id: postId,
+    })
 
-  const blocks: NotionBlock[] = []
+    const blocks: NotionBlock[] = []
 
-  for (const block of response.results) {
-    // 타입 가드: 전체 블록 응답인지 확인
-    if (!('type' in block)) continue
+    for (const block of response.results) {
+      // 타입 가드: 전체 블록 응답인지 확인
+      if (!('type' in block)) continue
 
-    const b = block as BlockObjectResponse
+      const b = block as BlockObjectResponse
 
-    switch (b.type) {
-      case 'paragraph': {
-        const text = extractPlainText(b.paragraph.rich_text)
-        if (text) blocks.push({ id: b.id, type: 'paragraph', content: text })
-        break
-      }
-      case 'heading_1': {
-        const text = extractPlainText(b.heading_1.rich_text)
-        if (text) blocks.push({ id: b.id, type: 'heading_1', content: text })
-        break
-      }
-      case 'heading_2': {
-        const text = extractPlainText(b.heading_2.rich_text)
-        if (text) blocks.push({ id: b.id, type: 'heading_2', content: text })
-        break
-      }
-      case 'heading_3': {
-        const text = extractPlainText(b.heading_3.rich_text)
-        if (text) blocks.push({ id: b.id, type: 'heading_3', content: text })
-        break
-      }
-      case 'bulleted_list_item': {
-        const text = extractPlainText(b.bulleted_list_item.rich_text)
-        if (text)
-          blocks.push({ id: b.id, type: 'bulleted_list_item', content: text })
-        break
-      }
-      case 'numbered_list_item': {
-        const text = extractPlainText(b.numbered_list_item.rich_text)
-        if (text)
-          blocks.push({ id: b.id, type: 'numbered_list_item', content: text })
-        break
-      }
-      case 'code': {
-        const text = extractPlainText(b.code.rich_text)
-        if (text)
-          blocks.push({
-            id: b.id,
-            type: 'code',
-            content: text,
-            language: b.code.language,
-          })
-        break
-      }
-      case 'quote': {
-        const text = extractPlainText(b.quote.rich_text)
-        if (text) blocks.push({ id: b.id, type: 'quote', content: text })
-        break
-      }
-      case 'image': {
-        // 이미지 URL 추출 (외부 URL 또는 파일 URL)
-        const imageUrl =
-          b.image.type === 'external'
-            ? b.image.external.url
-            : b.image.type === 'file'
-              ? b.image.file.url
-              : null
-        if (imageUrl)
-          blocks.push({ id: b.id, type: 'image', content: imageUrl })
-        break
-      }
-      case 'divider': {
-        blocks.push({ id: b.id, type: 'divider', content: '' })
-        break
+      switch (b.type) {
+        case 'paragraph': {
+          const text = extractPlainText(b.paragraph.rich_text)
+          if (text) blocks.push({ id: b.id, type: 'paragraph', content: text })
+          break
+        }
+        case 'heading_1': {
+          const text = extractPlainText(b.heading_1.rich_text)
+          if (text) blocks.push({ id: b.id, type: 'heading_1', content: text })
+          break
+        }
+        case 'heading_2': {
+          const text = extractPlainText(b.heading_2.rich_text)
+          if (text) blocks.push({ id: b.id, type: 'heading_2', content: text })
+          break
+        }
+        case 'heading_3': {
+          const text = extractPlainText(b.heading_3.rich_text)
+          if (text) blocks.push({ id: b.id, type: 'heading_3', content: text })
+          break
+        }
+        case 'bulleted_list_item': {
+          const text = extractPlainText(b.bulleted_list_item.rich_text)
+          if (text)
+            blocks.push({ id: b.id, type: 'bulleted_list_item', content: text })
+          break
+        }
+        case 'numbered_list_item': {
+          const text = extractPlainText(b.numbered_list_item.rich_text)
+          if (text)
+            blocks.push({ id: b.id, type: 'numbered_list_item', content: text })
+          break
+        }
+        case 'code': {
+          const text = extractPlainText(b.code.rich_text)
+          if (text)
+            blocks.push({
+              id: b.id,
+              type: 'code',
+              content: text,
+              language: b.code.language,
+            })
+          break
+        }
+        case 'quote': {
+          const text = extractPlainText(b.quote.rich_text)
+          if (text) blocks.push({ id: b.id, type: 'quote', content: text })
+          break
+        }
+        case 'image': {
+          // 이미지 URL 추출 (외부 URL 또는 파일 URL)
+          const imageUrl =
+            b.image.type === 'external'
+              ? b.image.external.url
+              : b.image.type === 'file'
+                ? b.image.file.url
+                : null
+          if (imageUrl)
+            blocks.push({ id: b.id, type: 'image', content: imageUrl })
+          break
+        }
+        case 'divider': {
+          blocks.push({ id: b.id, type: 'divider', content: '' })
+          break
+        }
       }
     }
-  }
 
-  return blocks
+    return blocks
+  } catch (error) {
+    console.error('[notion] getPostBlocks 실패:', error)
+    throw error
+  }
 }

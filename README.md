@@ -30,6 +30,8 @@ cp .env.local.example .env.local
 # .env.local 파일에 NOTION_API_KEY와 NOTION_DATABASE_ID 입력
 ```
 
+> **주의**: `NOTION_API_KEY` 또는 `NOTION_DATABASE_ID`가 누락된 경우 서버 시작 시 환경 변수 검증 에러가 발생합니다.
+
 Notion Integration 생성: https://www.notion.so/my-integrations
 
 ### Notion 데이터베이스 구조

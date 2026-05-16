@@ -9,12 +9,11 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .default('development'),
 
-  // Notion API 설정 (서버 사이드 전용)
-  NOTION_API_KEY: z.string().min(1, 'Notion API 키가 필요합니다').optional(),
+  // Notion API 설정 (서버 사이드 전용) — 필수값, 누락 시 서버 시작 실패
+  NOTION_API_KEY: z.string().min(1, 'NOTION_API_KEY 환경 변수가 필요합니다'),
   NOTION_DATABASE_ID: z
     .string()
-    .min(1, 'Notion 데이터베이스 ID가 필요합니다')
-    .optional(),
+    .min(1, 'NOTION_DATABASE_ID 환경 변수가 필요합니다'),
 
   // 앱 URL 설정
   VERCEL_URL: z.string().optional(),
