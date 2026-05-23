@@ -14,13 +14,30 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+/** 사이트 기본 설명 (OG와 공통으로 사용) */
+const siteDescription =
+  'Notion CMS 기반 경제뉴스 블로그. 주식, 부동산, 거시경제, 기업·산업 분야의 최신 뉴스를 한눈에.'
+
 export const metadata: Metadata = {
   title: {
     default: '오늘의 경제뉴스 겟',
     template: '%s | 오늘의 경제뉴스 겟',
   },
-  description:
-    'Notion CMS 기반 경제뉴스 블로그. 주식, 부동산, 거시경제, 기업·산업 분야의 최신 뉴스를 한눈에.',
+  description: siteDescription,
+  // Open Graph: 카카오톡, 슬랙 등 SNS 공유 시 미리보기에 사용
+  openGraph: {
+    type: 'website',
+    locale: 'ko_KR',
+    title: '오늘의 경제뉴스 겟',
+    description: siteDescription,
+    siteName: '오늘의 경제뉴스 겟',
+  },
+  // Twitter Card: 트위터(X) 공유 시 미리보기에 사용
+  twitter: {
+    card: 'summary_large_image',
+    title: '오늘의 경제뉴스 겟',
+    description: siteDescription,
+  },
 }
 
 export default function RootLayout({

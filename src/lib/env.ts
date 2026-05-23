@@ -14,6 +14,9 @@ const envSchema = z.object({
   NOTION_DATABASE_ID: z
     .string()
     .min(1, 'NOTION_DATABASE_ID 환경 변수가 필요합니다'),
+  NOTION_STOCKS_DATABASE_ID: z
+    .string()
+    .min(1, 'NOTION_STOCKS_DATABASE_ID 환경 변수가 필요합니다'),
 
   // 앱 URL 설정
   VERCEL_URL: z.string().optional(),
@@ -24,6 +27,7 @@ export const env = envSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
   NOTION_API_KEY: process.env.NOTION_API_KEY,
   NOTION_DATABASE_ID: process.env.NOTION_DATABASE_ID,
+  NOTION_STOCKS_DATABASE_ID: process.env.NOTION_STOCKS_DATABASE_ID,
   VERCEL_URL: process.env.VERCEL_URL,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 })

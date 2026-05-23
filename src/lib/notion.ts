@@ -8,7 +8,13 @@ import type {
   BlockObjectResponse,
   RichTextItemResponse,
 } from '@notionhq/client/build/src/api-endpoints'
-import type { Post, PostCategory, NotionBlock } from '@/types/notion'
+import type {
+  Post,
+  PostCategory,
+  NotionBlock,
+  RelatedStock,
+  Stock,
+} from '@/types/notion'
 import { env } from '@/lib/env'
 
 /** Notion API 클라이언트 인스턴스 (서버 사이드 전용) */
@@ -38,6 +44,13 @@ function pageToPost(page: PageObjectResponse): Post {
   const title =
     titleProp?.type === 'title' ? extractPlainText(titleProp.title) : ''
 
+  // 요약 추출
+  const summaryProp = props['Summary']
+  const summary =
+    summaryProp?.type === 'rich_text'
+      ? extractPlainText(summaryProp.rich_text) || null
+      : null
+
   // 카테고리 추출
   const categoryProp = props['Category']
   const category =
@@ -64,7 +77,34 @@ function pageToPost(page: PageObjectResponse): Post {
       ? ((statusProp.select?.name as '초안' | '발행됨') ?? null)
       : null
 
-  return { id: page.id, title, category, tags, published, status }
+  // 원본 뉴스 링크 추출
+  const newsLinkProp = props['NewsLink']
+  const newsLink =
+    newsLinkProp?.type === 'url' ? (newsLinkProp.url ?? null) : null
+
+  // 관련 종목 추출 (Stock1Name/Stock1Code ~ Stock3Name/Stock3Code)
+  const relatedStocks: RelatedStock[] = []
+  for (let i = 1; i <= 3; i++) {
+    const nameProp = props[`Stock${i}Name`]
+    const codeProp = props[`Stock${i}Code`]
+    const name =
+      nameProp?.type === 'rich_text' ? extractPlainText(nameProp.rich_text) : ''
+    const code =
+      codeProp?.type === 'rich_text' ? extractPlainText(codeProp.rich_text) : ''
+    if (name && code) relatedStocks.push({ name, code })
+  }
+
+  return {
+    id: page.id,
+    title,
+    summary,
+    category,
+    tags,
+    published,
+    status,
+    newsLink,
+    relatedStocks,
+  }
 }
 
 /**
@@ -256,6 +296,89 @@ export async function getPostBlocks(postId: string): Promise<NotionBlock[]> {
     return blocks
   } catch (error) {
     console.error('[notion] getPostBlocks 실패:', error)
+    throw error
+  }
+}
+
+/**
+ * Notion 종목 페이지 객체를 Stock 타입으로 변환
+ * @param page - Notion 페이지 응답 객체
+ * @returns 변환된 Stock 객체
+ */
+function pageToStock(page: PageObjectResponse): Stock {
+  const props = page.properties
+
+  // 종목명 추출 (title 속성)
+  const nameProp = props['Name']
+  const name =
+    nameProp?.type === 'title' ? extractPlainText(nameProp.title) : ''
+
+  // 종목코드 추출
+  const codeProp = props['Code']
+  const code =
+    codeProp?.type === 'rich_text' ? extractPlainText(codeProp.rich_text) : ''
+
+  // 업종 추출
+  const sectorProp = props['Sector']
+  const sector =
+    sectorProp?.type === 'select' ? (sectorProp.select?.name ?? null) : null
+
+  // 추천일 추출
+  const dateProp = props['Date']
+  const date = dateProp?.type === 'date' ? (dateProp.date?.start ?? null) : null
+
+  // 활성 상태 추출
+  const statusProp = props['Status']
+  const status =
+    statusProp?.type === 'select'
+      ? ((statusProp.select?.name as '활성' | '비활성') ?? null)
+      : null
+
+  // 추천 이유 추출
+  const reasonProp = props['Reason']
+  const reason =
+    reasonProp?.type === 'rich_text'
+      ? extractPlainText(reasonProp.rich_text) || null
+      : null
+
+  // 관련 뉴스 링크 추출
+  const newsLinkProp = props['NewsLink']
+  const newsLink =
+    newsLinkProp?.type === 'url' ? (newsLinkProp.url ?? null) : null
+
+  return { id: page.id, name, code, sector, date, status, reason, newsLink }
+}
+
+/**
+ * 활성 상태의 추천 종목 목록 조회 (최신순)
+ * @returns 활성 추천 종목 배열
+ */
+export async function getStocks(): Promise<Stock[]> {
+  try {
+    const response = await notion.databases.query({
+      database_id: env.NOTION_STOCKS_DATABASE_ID,
+      filter: {
+        property: 'Status',
+        select: {
+          equals: '활성',
+        },
+      },
+      sorts: [
+        {
+          property: 'Date',
+          direction: 'descending',
+        },
+      ],
+    })
+
+    return response.results
+      .filter(
+        (page): page is PageObjectResponse =>
+          page.object === 'page' && 'properties' in page
+      )
+      .map(pageToStock)
+  } catch (error) {
+    console.error('[notion] getStocks 실패:', error)
     throw error
   }
 }

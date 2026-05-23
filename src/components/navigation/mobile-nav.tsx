@@ -44,6 +44,7 @@ export function MobileHeader() {
             오늘의 경제뉴스 겟
           </Link>
           <Separator />
+          {/* 카테고리 링크 목록 */}
           <div className="space-y-1">
             {categoryItems.map(item => (
               <Link
@@ -61,6 +62,24 @@ export function MobileHeader() {
                 {item.title}
               </Link>
             ))}
+          </div>
+
+          {/* 추천종목 링크: 카테고리 영역과 구분선으로 분리 */}
+          <Separator />
+          <div className="space-y-1">
+            <Link
+              href="/stocks"
+              onClick={() => setOpen(false)}
+              className={cn(
+                'block rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'hover:bg-accent hover:text-accent-foreground',
+                pathname === '/stocks'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-foreground/70'
+              )}
+            >
+              오늘의 추천종목
+            </Link>
           </div>
         </div>
       </SheetContent>
