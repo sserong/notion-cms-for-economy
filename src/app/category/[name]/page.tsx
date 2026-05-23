@@ -1,23 +1,19 @@
 /**
- * 카테고리 페이지
+ * 카테고리 페이지 (서버 컴포넌트)
  * 특정 카테고리에 속하는 글 목록을 표시합니다 (F003, F005, F010)
  *
- * TODO: Notion API 연동 후 실제 데이터로 교체
+ * TODO: Notion API 연동 후 getDummyPostsByCategory()를 실제 API 호출로 교체
  */
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Container } from '@/components/layout/container'
-import type { PostCategory } from '@/types/notion'
-
-/** 유효한 카테고리 목록 */
-const VALID_CATEGORIES: PostCategory[] = [
-  '주식',
-  '부동산',
-  '거시경제',
-  '기업·산업',
-]
+import { PostCard } from '@/components/post/post-card'
+import { CategoryTabs } from '@/components/ui/category-tabs'
+import { EmptyState } from '@/components/ui/empty-state'
+import { getDummyPostsByCategory } from '@/lib/fixtures/posts'
+import { isValidCategory } from '@/lib/categories'
 
 interface CategoryPageProps {
   params: Promise<{ name: string }>
@@ -36,13 +32,16 @@ export async function generateMetadata({
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { name } = await params
-  // URL 인코딩된 한글 카테고리 이름 디코딩
-  const categoryName = decodeURIComponent(name) as PostCategory
+  const decodedName = decodeURIComponent(name)
 
-  // 유효하지 않은 카테고리는 404 반환
-  if (!VALID_CATEGORIES.includes(categoryName)) {
+  // 타입 가드로 유효한 카테고리인지 검증 — 유효하지 않으면 404
+  if (!isValidCategory(decodedName)) {
     notFound()
   }
+  const categoryName = decodedName
+
+  // 카테고리별 포스트 목록 로드 (추후 Notion API로 교체)
+  const posts = getDummyPostsByCategory(categoryName)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -58,13 +57,22 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               </p>
             </div>
 
-            {/* 카테고리 탭 버튼 */}
-            {/* TODO: 카테고리 탭 컴포넌트 추가 */}
+            {/* 카테고리 탭 (현재 카테고리 강조) */}
+            <CategoryTabs currentCategory={categoryName} />
 
-            {/* TODO: getPostsByCategory(categoryName)으로 글 목록 조회 */}
-            <div className="text-muted-foreground py-20 text-center">
-              <p>Notion API 연동 후 {categoryName} 글 목록이 표시됩니다.</p>
-            </div>
+            {/* 포스트 카드 그리드 또는 빈 상태 표시 */}
+            {posts.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {posts.map(post => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                message={`${categoryName} 글이 없습니다`}
+                description="아직 해당 카테고리의 글이 발행되지 않았습니다."
+              />
+            )}
           </div>
         </Container>
       </main>

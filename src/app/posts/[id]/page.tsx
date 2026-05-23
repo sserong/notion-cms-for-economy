@@ -1,47 +1,64 @@
 /**
- * 글 상세 페이지
+ * 글 상세 페이지 (서버 컴포넌트)
  * Notion 페이지 블록을 렌더링합니다 (F002, F005, F010, F011)
  *
- * TODO: Notion API 연동 후 실제 데이터로 교체
+ * TODO: Notion API 연동 후 더미 데이터를 실제 API 호출로 교체
  */
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Container } from '@/components/layout/container'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { CategoryBadge } from '@/components/post/category-badge'
+import { RelatedStockBadge } from '@/components/post/related-stock-badge'
+import { NotionBlockRenderer } from '@/components/post/notion-block-renderer'
+import { formatDate } from '@/lib/utils'
+import { getDummyPostById } from '@/lib/fixtures/posts'
+import { getDummyBlocks } from '@/lib/fixtures/blocks'
 
 interface PostPageProps {
   params: Promise<{ id: string }>
 }
 
-// TODO: Notion API 연동 후 동적 메타데이터 생성
+/** 포스트 제목을 메타데이터 title로 사용 */
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
   const { id } = await params
+  const post = getDummyPostById(id)
+
+  if (!post) {
+    return { title: '글을 찾을 수 없습니다' }
+  }
+
   return {
-    title: `글 ${id}`,
+    title: post.title,
+    description: post.summary ?? undefined,
   }
 }
 
 export default async function PostPage({ params }: PostPageProps) {
   const { id } = await params
 
-  // TODO: getPostById(id)와 getPostBlocks(id)로 데이터 조회
-  // 현재는 플레이스홀더
-  if (!id) {
+  // ID에 해당하는 포스트 조회 — 없으면 404
+  const post = getDummyPostById(id)
+  if (!post) {
     notFound()
   }
+
+  // 본문 블록 데이터 로드 (추후 Notion API로 교체)
+  const blocks = getDummyBlocks()
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
         <Container>
+          {/* 본문 최대 너비 제한 */}
           <div className="mx-auto max-w-2xl py-8">
             {/* 홈으로 돌아가기 버튼 */}
             <Button variant="ghost" size="sm" asChild className="mb-6 -ml-2">
@@ -51,20 +68,58 @@ export default async function PostPage({ params }: PostPageProps) {
               </Link>
             </Button>
 
-            {/* TODO: 포스트 메타 정보 헤더 */}
+            {/* 포스트 메타 정보 헤더 */}
             <div className="mb-8">
-              <Badge variant="secondary" className="mb-3">
-                카테고리
-              </Badge>
-              <h1 className="text-3xl font-bold">글 제목</h1>
-              <p className="text-muted-foreground mt-2 text-sm">발행일</p>
+              {/* 카테고리 배지 + 발행일 */}
+              <div className="mb-3 flex items-center gap-3">
+                {post.category && <CategoryBadge category={post.category} />}
+                {post.published && (
+                  <span className="text-muted-foreground text-sm">
+                    {formatDate(post.published)}
+                  </span>
+                )}
+              </div>
+
+              {/* 글 제목 */}
+              <h1 className="mb-4 text-3xl leading-tight font-bold">
+                {post.title}
+              </h1>
+
+              {/* 뉴스 원본 링크 버튼 (newsLink 있을 때만 표시) */}
+              {post.newsLink && (
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={post.newsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {/* TODO: 뉴스 링크 클릭 트래킹 구현 필요 */}
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    뉴스 원본 보기
+                  </a>
+                </Button>
+              )}
             </div>
 
-            {/* TODO: Notion 블록 렌더러 컴포넌트 (F011) */}
-            <div className="text-muted-foreground py-12 text-center">
-              <p>Notion API 연동 후 본문이 표시됩니다.</p>
-              <p className="mt-1 text-sm">페이지 ID: {id}</p>
-            </div>
+            {/* 관련 종목 섹션 (relatedStocks가 있을 때만 표시) */}
+            {post.relatedStocks.length > 0 && (
+              <div className="mb-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-muted-foreground text-sm font-medium">
+                    관련 종목:
+                  </span>
+                  {post.relatedStocks.map(stock => (
+                    <RelatedStockBadge key={stock.code} stock={stock} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 구분선 */}
+            <Separator className="mb-8" />
+
+            {/* 본문 블록 렌더러 */}
+            <NotionBlockRenderer blocks={blocks} />
           </div>
         </Container>
       </main>
