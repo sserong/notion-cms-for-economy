@@ -1,8 +1,6 @@
 /**
  * 추천종목 페이지 (서버 컴포넌트)
  * 활성 상태인 추천 종목 목록을 카드 그리드로 표시합니다 (F006, F007, F008, F009)
- *
- * TODO: Notion API 연동 후 getDummyStocks()를 실제 API 호출로 교체
  */
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/header'
@@ -10,16 +8,17 @@ import { Footer } from '@/components/layout/footer'
 import { Container } from '@/components/layout/container'
 import { StockCard } from '@/components/stock/stock-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { getDummyStocks } from '@/lib/fixtures/stocks'
+import { getStocks } from '@/lib/notion'
+
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: '오늘의 추천종목',
   description: '매일 업데이트되는 관심 종목 정보를 확인하세요.',
 }
 
-export default function StocksPage() {
-  // 더미 종목 데이터에서 활성 상태만 필터링
-  const activeStocks = getDummyStocks().filter(stock => stock.status === '활성')
+export default async function StocksPage() {
+  const stocks = await getStocks()
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -36,9 +35,9 @@ export default function StocksPage() {
             </div>
 
             {/* 활성 종목 카드 그리드 또는 빈 상태 표시 */}
-            {activeStocks.length > 0 ? (
+            {stocks.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {activeStocks.map(stock => (
+                {stocks.map(stock => (
                   <StockCard key={stock.id} stock={stock} />
                 ))}
               </div>

@@ -1,8 +1,6 @@
 /**
  * 글 상세 페이지 (서버 컴포넌트)
  * Notion 페이지 블록을 렌더링합니다 (F002, F005, F010, F011)
- *
- * TODO: Notion API 연동 후 더미 데이터를 실제 API 호출로 교체
  */
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -17,41 +15,42 @@ import { CategoryBadge } from '@/components/post/category-badge'
 import { RelatedStockBadge } from '@/components/post/related-stock-badge'
 import { NotionBlockRenderer } from '@/components/post/notion-block-renderer'
 import { formatDate } from '@/lib/utils'
-import { getDummyPostById } from '@/lib/fixtures/posts'
-import { getDummyBlocks } from '@/lib/fixtures/blocks'
+import { getPostById, getPostBlocks } from '@/lib/notion'
 
 interface PostPageProps {
   params: Promise<{ id: string }>
 }
+
+export const revalidate = 3600
 
 /** 포스트 제목을 메타데이터 title로 사용 */
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
   const { id } = await params
-  const post = getDummyPostById(id)
-
-  if (!post) {
+  try {
+    const post = await getPostById(id)
+    if (!post) return { title: '글을 찾을 수 없습니다' }
+    return { title: post.title, description: post.summary ?? undefined }
+  } catch {
     return { title: '글을 찾을 수 없습니다' }
-  }
-
-  return {
-    title: post.title,
-    description: post.summary ?? undefined,
   }
 }
 
 export default async function PostPage({ params }: PostPageProps) {
   const { id } = await params
 
-  // ID에 해당하는 포스트 조회 — 없으면 404
-  const post = getDummyPostById(id)
-  if (!post) {
+  // ID에 해당하는 포스트 조회 — API 오류 또는 null이면 404
+  let post
+  try {
+    post = await getPostById(id)
+  } catch {
     notFound()
   }
+  if (!post) notFound()
 
-  // 본문 블록 데이터 로드 (추후 Notion API로 교체)
-  const blocks = getDummyBlocks()
+  // 본문 블록 데이터 로드
+  const blocks = await getPostBlocks(id)
 
   return (
     <div className="flex min-h-screen flex-col">

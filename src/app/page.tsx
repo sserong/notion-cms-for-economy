@@ -1,18 +1,17 @@
 /**
  * 홈 페이지 (서버 컴포넌트)
  * 최근 발행된 경제뉴스 글 목록을 표시합니다 (F001, F003, F004, F005)
- *
- * TODO: Notion API 연동 후 getDummyPosts()를 실제 API 호출로 교체
  */
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { Container } from '@/components/layout/container'
 import { PostListClient } from '@/components/post/post-list-client'
-import { getDummyPosts } from '@/lib/fixtures/posts'
+import { getPosts } from '@/lib/notion'
 
-export default function HomePage() {
-  // 더미 포스트 데이터 로드 (추후 Notion API로 교체)
-  const posts = getDummyPosts()
+export const revalidate = 60
+
+export default async function HomePage() {
+  const posts = await getPosts()
 
   return (
     <div className="flex min-h-screen flex-col">

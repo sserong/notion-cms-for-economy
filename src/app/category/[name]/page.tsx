@@ -1,8 +1,6 @@
 /**
  * 카테고리 페이지 (서버 컴포넌트)
  * 특정 카테고리에 속하는 글 목록을 표시합니다 (F003, F005, F010)
- *
- * TODO: Notion API 연동 후 getDummyPostsByCategory()를 실제 API 호출로 교체
  */
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -12,8 +10,10 @@ import { Container } from '@/components/layout/container'
 import { PostCard } from '@/components/post/post-card'
 import { CategoryTabs } from '@/components/ui/category-tabs'
 import { EmptyState } from '@/components/ui/empty-state'
-import { getDummyPostsByCategory } from '@/lib/fixtures/posts'
+import { getPostsByCategory } from '@/lib/notion'
 import { isValidCategory } from '@/lib/categories'
+
+export const revalidate = 60
 
 interface CategoryPageProps {
   params: Promise<{ name: string }>
@@ -40,8 +40,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   }
   const categoryName = decodedName
 
-  // 카테고리별 포스트 목록 로드 (추후 Notion API로 교체)
-  const posts = getDummyPostsByCategory(categoryName)
+  const posts = await getPostsByCategory(categoryName)
 
   return (
     <div className="flex min-h-screen flex-col">

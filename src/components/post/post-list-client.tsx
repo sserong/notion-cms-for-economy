@@ -5,7 +5,7 @@
  */
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { PostCard } from '@/components/post/post-card'
 import { CategoryTabs } from '@/components/ui/category-tabs'
 import { SearchBar } from '@/components/ui/search-bar'
@@ -18,8 +18,17 @@ interface PostListClientProps {
 }
 
 export function PostListClient({ posts }: PostListClientProps) {
-  // 검색어 상태 관리
+  // inputValue: 입력창에 즉시 반영되는 값
+  // searchQuery: 150ms 디바운스 후 필터링에 사용되는 값
+  const [inputValue, setInputValue] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSearchChange = (value: string) => {
+    setInputValue(value)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => setSearchQuery(value), 150)
+  }
 
   // 제목 기준으로 필터링 (대소문자 무관) — useMemo로 불필요한 재계산 방지
   const filteredPosts = useMemo(
@@ -34,8 +43,8 @@ export function PostListClient({ posts }: PostListClientProps) {
     <div>
       {/* 검색 바 */}
       <SearchBar
-        value={searchQuery}
-        onChange={setSearchQuery}
+        value={inputValue}
+        onChange={handleSearchChange}
         placeholder="글 제목으로 검색하세요"
       />
 
@@ -52,7 +61,7 @@ export function PostListClient({ posts }: PostListClientProps) {
       ) : (
         <EmptyState
           message="검색 결과가 없습니다"
-          description={`"${searchQuery}"에 해당하는 글을 찾을 수 없습니다. 다른 검색어를 입력해보세요.`}
+          description={`"${inputValue}"에 해당하는 글을 찾을 수 없습니다. 다른 검색어를 입력해보세요.`}
         />
       )}
     </div>
