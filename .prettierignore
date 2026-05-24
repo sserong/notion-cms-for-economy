@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Playwright MCP 자동 생성 파일
 .playwright-mcp/
+
+# Shrimp Task Manager 자동 생성 파일
+shrimp_data/
