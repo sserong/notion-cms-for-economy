@@ -10,7 +10,12 @@ import { usePathname } from 'next/navigation'
 import { Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 
 /** 카테고리 네비게이션 아이템 */
@@ -35,6 +40,8 @@ export function MobileHeader() {
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-[280px]">
+        {/* Radix Dialog 접근성 요건: SheetTitle이 없으면 스크린리더가 제목을 읽지 못함 */}
+        <SheetTitle className="sr-only">내비게이션 메뉴</SheetTitle>
         <div className="flex flex-col space-y-3 pt-4">
           <Link
             href="/"

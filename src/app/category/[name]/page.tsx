@@ -46,7 +46,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container>
           <div className="py-8">
             {/* 카테고리 제목 */}

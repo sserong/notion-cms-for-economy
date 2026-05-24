@@ -119,4 +119,8 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* 키보드 포커스 링 — 링크·인터랙티브 요소를 마우스와 구분하여 강조 */
+  a:focus-visible {
+    @apply outline-ring rounded-sm outline-2 outline-offset-2;
+  }
 }

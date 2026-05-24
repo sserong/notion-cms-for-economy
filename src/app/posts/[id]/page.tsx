@@ -56,7 +56,7 @@ export default async function PostPage({ params }: PostPageProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container>
           {/* 본문 최대 너비 제한 */}
           <div className="mx-auto max-w-2xl py-8">

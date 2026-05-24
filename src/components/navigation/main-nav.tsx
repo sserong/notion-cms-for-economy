@@ -31,7 +31,7 @@ export function MainNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="flex items-center space-x-1">
+    <nav aria-label="주요 내비게이션" className="flex items-center space-x-1">
       {/* 카테고리 링크 목록 */}
       {categoryItems.map(item => (
         <Link

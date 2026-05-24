@@ -39,3 +39,6 @@ Thumbs.db
 
 # Generated files
 next-env.d.ts
+
+# Playwright MCP 자동 생성 파일
+.playwright-mcp/

@@ -12,7 +12,10 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex flex-1 items-center justify-center">
+      <main
+        id="main-content"
+        className="flex flex-1 items-center justify-center"
+      >
         <Container>
           <div className="flex flex-col items-center justify-center py-20 text-center">
             {/* 404 상태 표시 */}

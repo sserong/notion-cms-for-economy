@@ -17,7 +17,7 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <Container>
           <div className="py-8">
             {/* 페이지 헤더 */}
