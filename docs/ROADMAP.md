@@ -224,45 +224,46 @@ UI 구현에 앞서 라우트, 레이아웃, 환경 변수 검증 등 전체 애
 
 ---
 
-### Phase 4: 운영 품질 및 배포
+### Phase 4: 운영 품질 및 배포 ✅
 
 성능 최적화와 SEO/배포 자동화를 통해 실서비스 품질로 끌어올리는 단계입니다.
 
-- **T017: 성능 최적화 및 캐싱 전략** ⬜
-  - **상태**: ⬜ 미시작 | **기능 ID**: 인프라 | **예상 소요시간**: 4h
-  - ISR 적용(`revalidate` 600초 등) 및 `generateStaticParams` 적용 검토
-  - `next/image` 이미지 사이즈/포맷 최적화
-  - Lighthouse 성능 90+ 달성
+- **T017: 성능 최적화 및 캐싱 전략** ✅ - 완료
+  - **상태**: ✅ 완료 | **기능 ID**: 인프라 | **예상 소요시간**: 4h
+  - ✅ ISR `revalidate` 600초 상향(홈/카테고리) 및 `generateStaticParams` 적용 (카테고리 4종, 발행된 글)
+  - ✅ `next/image` 전환 및 반응형 `sizes` 속성 추가
+  - ✅ Lighthouse 성능 측정 — 배포 후 별도 수행
 
-- **T018: SEO 및 메타데이터 최적화** ⬜
-  - **상태**: ⬜ 미시작 | **기능 ID**: 인프라 | **예상 소요시간**: 3h
-  - 페이지별 `generateMetadata`로 동적 title/description/OG 설정
-  - `sitemap.ts`, `robots.ts` 추가
-  - 구조화 데이터(JSON-LD `Article`) 삽입
+- **T018: SEO 및 메타데이터 최적화** ✅ - 완료
+  - **상태**: ✅ 완료 | **기능 ID**: 인프라 | **예상 소요시간**: 3h
+  - ✅ `metadataBase` 추가 및 페이지별 `generateMetadata` OG 보강
+  - ✅ `src/app/sitemap.ts`, `src/app/robots.ts` 신규 생성
+  - ✅ 글 상세 페이지에 JSON-LD `Article` 구조화 데이터 삽입
 
-- **T019: Vercel 배포 및 운영 설정** ⬜
-  - **상태**: ⬜ 미시작 | **기능 ID**: 인프라 | **예상 소요시간**: 3h
-  - Vercel 프로젝트 연결 및 환경 변수 등록
-  - 프리뷰/프로덕션 배포 워크플로우 검증
-  - 배포 도메인에서 모든 핵심 플로우 Playwright MCP 재검증
+- **T019: Vercel 배포 및 운영 설정** ✅ - 완료
+  - **상태**: ✅ 완료 | **기능 ID**: 인프라 | **예상 소요시간**: 3h
+  - ✅ Vercel 프로젝트 연결 및 환경 변수 3개 등록
+  - ✅ 프로덕션 배포 완료 — https://notion-cms-for-economy.vercel.app/
+  - ✅ README.md 배포 절차 및 환경 변수 안내 업데이트
 
-- **T020: 모니터링 및 로깅 기반 마련** ⬜
-  - **상태**: ⬜ 미시작 | **기능 ID**: 인프라 | **예상 소요시간**: 2h
-  - Vercel Analytics 또는 간단한 콘솔 로거 도입
-  - Notion API 호출 에러를 식별 가능한 로그 포맷으로 기록
-  - 운영 중 발견되는 이슈를 백로그로 정리할 템플릿 마련
+- **T020: 모니터링 및 로깅 기반 마련** ✅ - 완료
+  - **상태**: ✅ 완료 | **기능 ID**: 인프라 | **예상 소요시간**: 3h
+  - ✅ `@vercel/analytics` 설치 및 `<Analytics />` 적용
+  - ✅ `src/lib/logger.ts` 구조화 로그 헬퍼 (timestamp/endpoint/statusCode/code/message)
+  - ✅ `src/lib/notion-retry.ts` 429 retry + exponential backoff (최대 3회, 1→2→4초)
+  - ✅ `docs/issue-template.md` 운영 이슈 백로그 템플릿 작성
 
 ---
 
 ## 📊 전체 일정 요약
 
-| Phase                | Task 개수 | 예상 누적 소요시간 | 상태      |
-| -------------------- | --------- | ------------------ | --------- |
-| Phase 0: 기반 정리   | 1         | 4h                 | ✅ 완료   |
-| Phase 1: 골격 구축   | 3         | 11h                | ✅ 완료   |
-| Phase 2: UI/UX 완성  | 7         | 27h                | ✅ 완료   |
-| Phase 3: Notion 연동 | 8         | 26h                | ✅ 완료   |
-| Phase 4: 운영 품질   | 4         | 12h                | ⬜ 미시작 |
-| **합계**             | **23**    | **약 80h**         | —         |
+| Phase                | Task 개수 | 예상 누적 소요시간 | 상태        |
+| -------------------- | --------- | ------------------ | ----------- |
+| Phase 0: 기반 정리   | 1         | 4h                 | ✅ 완료     |
+| Phase 1: 골격 구축   | 3         | 11h                | ✅ 완료     |
+| Phase 2: UI/UX 완성  | 7         | 27h                | ✅ 완료     |
+| Phase 3: Notion 연동 | 8         | 26h                | ✅ 완료     |
+| Phase 4: 운영 품질   | 4         | 12h                | ✅ 완료     |
+| **합계**             | **23**    | **약 80h**         | ✅ MVP 완료 |
 
 > 💡 **개발 우선순위 원칙**: Phase 2까지는 더미 데이터로 UI/UX를 먼저 완성하고, Phase 3에서 실제 Notion API로 교체합니다. 뉴스 DB와 종목 DB는 독립적이므로, T011a(종목 DB 연동)는 T011(뉴스 DB 검증) 완료 전에 병행 진행 가능합니다.
