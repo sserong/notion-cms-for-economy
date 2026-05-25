@@ -1,6 +1,6 @@
 # T020: 모니터링, 로깅 및 Notion API 복원력 강화
 
-- **상태**: ⬜ 미시작
+- **상태**: ✅ 완료 (2026-05-25)
 - **기능 ID**: 인프라
 - **예상 소요시간**: 3h
 - **Phase**: Phase 4 (운영 품질 및 배포)
@@ -56,13 +56,13 @@
 
 ## 구현 단계
 
-- [ ] 1단계: `@vercel/analytics` 설치 및 적용
+- [x] 1단계: `@vercel/analytics` 설치 및 적용
   - `npm install @vercel/analytics`
   - `src/app/layout.tsx`에 `import { Analytics } from '@vercel/analytics/next'` 추가 후 `<body>` 내부 배치
-- [ ] 2단계: `src/lib/logger.ts` 구조화 로그 헬퍼 작성
+- [x] 2단계: `src/lib/logger.ts` 구조화 로그 헬퍼 작성
   - 입력: `{ endpoint: string, error: unknown }` → `console.error`로 `{ timestamp, endpoint, statusCode, code, message }` 직렬화
   - `@notionhq/client`의 `APIResponseError` 타입 가드로 `status`/`code` 안전 추출
-- [ ] 3단계: `src/lib/notion-retry.ts` retry 헬퍼 작성
+- [x] 3단계: `src/lib/notion-retry.ts` retry 헬퍼 작성
 
   ```ts
   // 구현 참고 스케치
@@ -85,12 +85,12 @@
   }
   ```
 
-- [ ] 4단계: `src/lib/notion.ts` 5개 함수에 `withRetry` 적용
+- [x] 4단계: `src/lib/notion.ts` 5개 함수에 `withRetry` 적용
   - `getPosts`, `getPostsByCategory`, `getPostById`, `getPostBlocks`, `getStocks`의 핵심 API 호출을 `withRetry(() => notion.xxx(...))` 로 래핑
   - 기존 catch 블록은 구조화 로그(2단계 헬퍼)로 교체 후 throw 유지
-- [ ] 5단계: `docs/issue-template.md` 작성
+- [x] 5단계: `docs/issue-template.md` 작성
   - 섹션: 제목 / 심각도(P0~P3) / 발생 환경 / 재현 절차 / 기대 동작 / 실제 동작 / 관련 로그 / 대응 방안 / 상태
-- [ ] 6단계: 빌드 및 검증 (아래 "## 테스트 체크리스트" 수행)
+- [x] 6단계: 빌드 및 검증 — `npm run check-all` 통과, `npm run build` 성공
 
 ## 테스트 체크리스트 (Playwright MCP)
 
@@ -106,4 +106,23 @@
 
 ## 변경 사항 요약
 
-<!-- 작업 완료 후 작성 -->
+### 신규 생성 파일
+
+| 파일                      | 역할                                                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `src/lib/logger.ts`       | `logNotionError(endpoint, error)` — timestamp/endpoint/statusCode/code/message를 JSON으로 `console.error` 출력 |
+| `src/lib/notion-retry.ts` | `withRetry(fn, options)` — 429 한정 최대 3회 재시도, 1→2→4초 exponential backoff                               |
+| `docs/issue-template.md`  | 운영 이슈 백로그 템플릿 (심각도 P0~P3, 구조화 로그 붙여넣기 섹션 포함)                                         |
+
+### 수정 파일
+
+| 파일                 | 변경 내용                                                              |
+| -------------------- | ---------------------------------------------------------------------- |
+| `package.json`       | `@vercel/analytics@2.0.1` 의존성 추가                                  |
+| `src/app/layout.tsx` | `<Analytics />` 컴포넌트 추가                                          |
+| `src/lib/notion.ts`  | 5개 함수 API 호출 `withRetry` 래핑, catch 블록 `logNotionError`로 교체 |
+
+### 빌드 결과
+
+- `npm run check-all`: 통과
+- `npm run build`: 성공
