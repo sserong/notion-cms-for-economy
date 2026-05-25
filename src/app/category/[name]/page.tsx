@@ -11,9 +11,22 @@ import { PostCard } from '@/components/post/post-card'
 import { CategoryTabs } from '@/components/ui/category-tabs'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getPostsByCategory } from '@/lib/notion'
-import { isValidCategory } from '@/lib/categories'
+import { isValidCategory, POST_CATEGORIES } from '@/lib/categories'
 
-export const revalidate = 60
+// 홈/카테고리는 Notion API 요청 절감을 위해 10분(600초)으로 상향 조정
+// 경제뉴스 특성상 실시간 업데이트 불필요, API 호출 비용 절감이 더 중요
+export const revalidate = 600
+
+/**
+ * 빌드 타임에 4개 카테고리 경로를 정적 생성합니다
+ * POST_CATEGORIES 상수를 재사용하여 단일 진실 공급원 유지
+ * 한글 카테고리명은 encodeURIComponent로 인코딩하여 URL 안전성 보장
+ */
+export async function generateStaticParams() {
+  return POST_CATEGORIES.map(category => ({
+    name: encodeURIComponent(category),
+  }))
+}
 
 interface CategoryPageProps {
   params: Promise<{ name: string }>
@@ -27,6 +40,11 @@ export async function generateMetadata({
   return {
     title: `${decodedName} 카테고리`,
     description: `${decodedName} 분야의 경제뉴스 글 목록`,
+    // SNS 공유 시 카테고리명이 포함된 미리보기 표시
+    openGraph: {
+      title: `${decodedName} | 오늘의 경제뉴스 겟`,
+      description: `${decodedName} 분야의 경제뉴스 글 목록`,
+    },
   }
 }
 

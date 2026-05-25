@@ -3,6 +3,7 @@
  * NotionBlock 배열을 받아 각 타입에 맞는 HTML 요소로 렌더링합니다
  * 연속된 bulleted_list_item / numbered_list_item은 하나의 ul/ol로 그루핑합니다
  */
+import Image from 'next/image'
 import type { NotionBlock, NotionBlockType } from '@/types/notion'
 
 interface NotionBlockRendererProps {
@@ -85,11 +86,19 @@ function renderBlock(block: NotionBlock) {
 
     case 'image':
       return (
-        <div key={block.id}>
-          {/* next/image 대신 img 태그 사용 — 외부 도메인 설정 불필요 */}
-          {/* TODO: 이미지 최적화를 위해 추후 next/image로 교체 고려 */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={block.content} alt="" className="my-4 w-full rounded-lg" />
+        // next/image로 교체 — webp/avif 자동 변환 및 lazy loading 적용
+        // 본문 최대 너비(max-w-2xl = 672px)에 맞춰 sizes 반응형 설정
+        // Notion 이미지는 실제 크기 불명이므로 기본값 지정 후 height: auto로 비율 유지
+        <div key={block.id} className="relative my-4 w-full">
+          <Image
+            src={block.content}
+            alt=""
+            width={672}
+            height={400}
+            className="w-full rounded-lg object-cover"
+            sizes="(max-width: 768px) 100vw, 672px"
+            style={{ height: 'auto' }}
+          />
         </div>
       )
 

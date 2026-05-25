@@ -8,7 +8,9 @@ import { Container } from '@/components/layout/container'
 import { PostListClient } from '@/components/post/post-list-client'
 import { getPosts } from '@/lib/notion'
 
-export const revalidate = 60
+// 홈은 Notion API 요청 절감을 위해 10분(600초)으로 상향 조정
+// 경제뉴스 특성상 실시간 업데이트 불필요, API 호출 비용 절감이 더 중요
+export const revalidate = 600
 
 export default async function HomePage() {
   const posts = await getPosts()

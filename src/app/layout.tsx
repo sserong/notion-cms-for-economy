@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { getBaseUrl } from '@/lib/site'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -19,6 +20,8 @@ const siteDescription =
   'Notion CMS 기반 경제뉴스 블로그. 주식, 부동산, 거시경제, 기업·산업 분야의 최신 뉴스를 한눈에.'
 
 export const metadata: Metadata = {
+  // OG 이미지/URL 등의 상대경로를 절대경로로 변환하는 기준점
+  metadataBase: new URL(getBaseUrl()),
   title: {
     default: '오늘의 경제뉴스 겟',
     template: '%s | 오늘의 경제뉴스 겟',

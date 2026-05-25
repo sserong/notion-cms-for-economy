@@ -15,15 +15,33 @@ import { CategoryBadge } from '@/components/post/category-badge'
 import { RelatedStockBadge } from '@/components/post/related-stock-badge'
 import { NotionBlockRenderer } from '@/components/post/notion-block-renderer'
 import { formatDate } from '@/lib/utils'
-import { getPostById, getPostBlocks } from '@/lib/notion'
+import { getPostById, getPostBlocks, getPosts } from '@/lib/notion'
+import { getBaseUrl, siteConfig } from '@/lib/site'
 
 interface PostPageProps {
   params: Promise<{ id: string }>
 }
 
+// 글 상세는 자주 변경되지 않으므로 1시간(3600초) 유지
+// 신규 글은 generateStaticParams에 없으면 첫 요청 시 ISR로 생성됨
 export const revalidate = 3600
 
-/** 포스트 제목을 메타데이터 title로 사용 */
+/**
+ * 빌드 타임에 발행된 모든 글 경로를 정적 생성합니다
+ * 빌드 시점의 Notion API 오류로 빌드 전체가 실패하지 않도록 try-catch 처리
+ * 빌드 후 새로 발행된 글은 첫 요청 시 ISR(revalidate)로 자동 생성됩니다
+ */
+export async function generateStaticParams() {
+  try {
+    const posts = await getPosts()
+    return posts.map(post => ({ id: post.id }))
+  } catch {
+    // Notion API 오류 시 빈 배열 반환 → 빌드는 성공, 모든 글은 ISR로 처리
+    return []
+  }
+}
+
+/** 포스트 제목을 메타데이터 title로 사용, OG 정보 보강 */
 export async function generateMetadata({
   params,
 }: PostPageProps): Promise<Metadata> {
@@ -31,7 +49,18 @@ export async function generateMetadata({
   try {
     const post = await getPostById(id)
     if (!post) return { title: '글을 찾을 수 없습니다' }
-    return { title: post.title, description: post.summary ?? undefined }
+    return {
+      title: post.title,
+      description: post.summary ?? undefined,
+      // SNS 공유 시 article 형태로 미리보기 표시 (카카오톡, 슬랙 등)
+      openGraph: {
+        type: 'article',
+        title: post.title,
+        description: post.summary ?? undefined,
+        publishedTime: post.published ?? undefined,
+        url: `${getBaseUrl()}/posts/${id}`,
+      },
+    }
   } catch {
     return { title: '글을 찾을 수 없습니다' }
   }
@@ -52,8 +81,27 @@ export default async function PostPage({ params }: PostPageProps) {
   // 본문 블록 데이터 로드
   const blocks = await getPostBlocks(id)
 
+  // 검색엔진이 글의 구조화 데이터를 파악할 수 있도록 JSON-LD Article 스키마 삽입
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    datePublished: post.published ?? undefined,
+    author: { '@type': 'Person', name: siteConfig.name },
+    publisher: { '@type': 'Organization', name: siteConfig.name },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${getBaseUrl()}/posts/${id}`,
+    },
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
+      {/* 구조화 데이터: 구글 등 검색엔진이 기사 정보를 이해하는 데 사용 */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Header />
       <main id="main-content" className="flex-1">
         <Container>
