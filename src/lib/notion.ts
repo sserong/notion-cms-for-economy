@@ -16,6 +16,8 @@ import type {
   Stock,
 } from '@/types/notion'
 import { env } from '@/lib/env'
+import { logNotionError } from '@/lib/logger'
+import { withRetry } from '@/lib/notion-retry'
 
 /** Notion API 클라이언트 인스턴스 (서버 사이드 전용) */
 const notion = new Client({
@@ -113,21 +115,18 @@ function pageToPost(page: PageObjectResponse): Post {
  */
 export async function getPosts(): Promise<Post[]> {
   try {
-    const response = await notion.databases.query({
-      database_id: env.NOTION_DATABASE_ID,
-      filter: {
-        property: 'Status',
-        select: {
-          equals: '발행됨',
-        },
-      },
-      sorts: [
-        {
-          property: 'Published',
-          direction: 'descending',
-        },
-      ],
-    })
+    const response = await withRetry(
+      () =>
+        notion.databases.query({
+          database_id: env.NOTION_DATABASE_ID,
+          filter: {
+            property: 'Status',
+            select: { equals: '발행됨' },
+          },
+          sorts: [{ property: 'Published', direction: 'descending' }],
+        }),
+      { endpoint: 'getPosts' }
+    )
 
     return response.results
       .filter(
@@ -136,7 +135,7 @@ export async function getPosts(): Promise<Post[]> {
       )
       .map(pageToPost)
   } catch (error) {
-    console.error('[notion] getPosts 실패:', error)
+    logNotionError('getPosts', error)
     throw error
   }
 }
@@ -150,31 +149,20 @@ export async function getPostsByCategory(
   category: PostCategory
 ): Promise<Post[]> {
   try {
-    const response = await notion.databases.query({
-      database_id: env.NOTION_DATABASE_ID,
-      filter: {
-        and: [
-          {
-            property: 'Status',
-            select: {
-              equals: '발행됨',
-            },
+    const response = await withRetry(
+      () =>
+        notion.databases.query({
+          database_id: env.NOTION_DATABASE_ID,
+          filter: {
+            and: [
+              { property: 'Status', select: { equals: '발행됨' } },
+              { property: 'Category', select: { equals: category } },
+            ],
           },
-          {
-            property: 'Category',
-            select: {
-              equals: category,
-            },
-          },
-        ],
-      },
-      sorts: [
-        {
-          property: 'Published',
-          direction: 'descending',
-        },
-      ],
-    })
+          sorts: [{ property: 'Published', direction: 'descending' }],
+        }),
+      { endpoint: 'getPostsByCategory' }
+    )
 
     return response.results
       .filter(
@@ -183,7 +171,7 @@ export async function getPostsByCategory(
       )
       .map(pageToPost)
   } catch (error) {
-    console.error('[notion] getPostsByCategory 실패:', error)
+    logNotionError('getPostsByCategory', error)
     throw error
   }
 }
@@ -195,13 +183,16 @@ export async function getPostsByCategory(
  */
 export async function getPostById(postId: string): Promise<Post | null> {
   try {
-    const page = await notion.pages.retrieve({ page_id: postId })
+    const page = await withRetry(
+      () => notion.pages.retrieve({ page_id: postId }),
+      { endpoint: 'getPostById' }
+    )
 
     if (page.object !== 'page' || !('properties' in page)) return null
 
     return pageToPost(page as PageObjectResponse)
   } catch (error) {
-    console.error('[notion] getPostById 실패:', error)
+    logNotionError('getPostById', error)
     throw error
   }
 }
@@ -213,9 +204,10 @@ export async function getPostById(postId: string): Promise<Post | null> {
  */
 export async function getPostBlocks(postId: string): Promise<NotionBlock[]> {
   try {
-    const response = await notion.blocks.children.list({
-      block_id: postId,
-    })
+    const response = await withRetry(
+      () => notion.blocks.children.list({ block_id: postId }),
+      { endpoint: 'getPostBlocks' }
+    )
 
     const blocks: NotionBlock[] = []
 
@@ -295,7 +287,7 @@ export async function getPostBlocks(postId: string): Promise<NotionBlock[]> {
 
     return blocks
   } catch (error) {
-    console.error('[notion] getPostBlocks 실패:', error)
+    logNotionError('getPostBlocks', error)
     throw error
   }
 }
@@ -355,21 +347,18 @@ function pageToStock(page: PageObjectResponse): Stock {
  */
 export async function getStocks(): Promise<Stock[]> {
   try {
-    const response = await notion.databases.query({
-      database_id: env.NOTION_STOCKS_DATABASE_ID,
-      filter: {
-        property: 'Status',
-        select: {
-          equals: '활성',
-        },
-      },
-      sorts: [
-        {
-          property: 'Date',
-          direction: 'descending',
-        },
-      ],
-    })
+    const response = await withRetry(
+      () =>
+        notion.databases.query({
+          database_id: env.NOTION_STOCKS_DATABASE_ID,
+          filter: {
+            property: 'Status',
+            select: { equals: '활성' },
+          },
+          sorts: [{ property: 'Date', direction: 'descending' }],
+        }),
+      { endpoint: 'getStocks' }
+    )
 
     return response.results
       .filter(
@@ -378,7 +367,7 @@ export async function getStocks(): Promise<Stock[]> {
       )
       .map(pageToStock)
   } catch (error) {
-    console.error('[notion] getStocks 실패:', error)
+    logNotionError('getStocks', error)
     throw error
   }
 }
