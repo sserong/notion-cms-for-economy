@@ -18,6 +18,11 @@ const envSchema = z.object({
     .string()
     .min(1, 'NOTION_STOCKS_DATABASE_ID 환경 변수가 필요합니다'),
 
+  // 온디맨드 캐시 무효화 (서버 전용) — 최신정보 확인하기 버튼 인증 토큰
+  REVALIDATE_SECRET: z
+    .string()
+    .min(1, 'REVALIDATE_SECRET 환경 변수가 필요합니다'),
+
   // 앱 URL 설정
   VERCEL_URL: z.string().optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
@@ -28,6 +33,7 @@ export const env = envSchema.parse({
   NOTION_API_KEY: process.env.NOTION_API_KEY,
   NOTION_DATABASE_ID: process.env.NOTION_DATABASE_ID,
   NOTION_STOCKS_DATABASE_ID: process.env.NOTION_STOCKS_DATABASE_ID,
+  REVALIDATE_SECRET: process.env.REVALIDATE_SECRET,
   VERCEL_URL: process.env.VERCEL_URL,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 })

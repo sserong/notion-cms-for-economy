@@ -36,14 +36,17 @@ Notion을 CMS로 활용한 경제뉴스 블로그입니다. Notion에서 글을 
 cp .env.local.example .env.local
 ```
 
-| 변수명                      | 필수 여부 | 설명                             |
-| --------------------------- | --------- | -------------------------------- |
-| `NOTION_API_KEY`            | 필수      | Notion Integration 시크릿 키     |
-| `NOTION_DATABASE_ID`        | 필수      | 뉴스 데이터베이스 ID             |
-| `NOTION_STOCKS_DATABASE_ID` | 필수      | 추천종목 데이터베이스 ID         |
-| `NEXT_PUBLIC_APP_URL`       | 선택      | 배포 도메인 (예: https://my.com) |
+| 변수명                      | 필수 여부 | 설명                                         |
+| --------------------------- | --------- | -------------------------------------------- |
+| `NOTION_API_KEY`            | 필수      | Notion Integration 시크릿 키                 |
+| `NOTION_DATABASE_ID`        | 필수      | 뉴스 데이터베이스 ID                         |
+| `NOTION_STOCKS_DATABASE_ID` | 필수      | 추천종목 데이터베이스 ID                     |
+| `REVALIDATE_SECRET`         | 필수      | 최신정보 확인하기 버튼 캐시 무효화 인증 토큰 |
+| `NEXT_PUBLIC_APP_URL`       | 선택      | 배포 도메인 (예: https://my.com)             |
 
 > **주의**: 필수 환경 변수가 누락된 경우 서버 시작 및 빌드 시 Zod 검증 에러가 발생합니다.
+
+> **REVALIDATE_SECRET**: 추측하기 어려운 임의 문자열을 사용하세요 (예: `openssl rand -hex 32`로 생성). Vercel 환경 변수에도 동일한 값을 등록해야 배포 환경에서 버튼이 정상 동작합니다.
 
 ### 3. Notion 데이터베이스 스키마
 
